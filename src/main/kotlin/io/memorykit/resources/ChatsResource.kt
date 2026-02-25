@@ -63,7 +63,7 @@ class ChatsResource internal constructor(private val http: HttpClient) {
      * @return The [Chat] with messages.
      */
     suspend fun get(id: String): Chat {
-        val response = http.get("/chats/$id")
+        val response = http.get("/chats/$id/messages")
         return http.json.decodeFromString(Chat.serializer(), response)
     }
 
