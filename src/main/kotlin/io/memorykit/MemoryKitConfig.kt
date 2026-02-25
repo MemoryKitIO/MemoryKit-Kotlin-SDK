@@ -36,7 +36,7 @@ data class MemoryKitConfig(
         const val DEFAULT_MAX_RETRIES = 3
         const val DEFAULT_RETRY_BASE_DELAY_MS = 500L
         const val DEFAULT_RETRY_MAX_DELAY_MS = 30_000L
-        const val SDK_VERSION = "0.1.0"
+        const val SDK_VERSION = "0.1.1"
         const val USER_AGENT = "memorykit-kotlin/$SDK_VERSION"
     }
 
