@@ -21,7 +21,8 @@ data class QueryRequest(
     val responseFormat: String? = null,
     @SerialName("include_graph")
     val includeGraph: Boolean? = null,
-    val filters: Filters? = null
+    val filters: Filters? = null,
+    val stream: Boolean? = null
 )
 
 /**
@@ -38,22 +39,3 @@ data class QueryResponse(
     val usage: Usage? = null
 )
 
-/**
- * Request body for SSE streaming.
- */
-@Serializable
-data class StreamRequest(
-    val query: String,
-    @SerialName("max_sources")
-    val maxSources: Int? = null,
-    val temperature: Double? = null,
-    val mode: String? = null,
-    @SerialName("user_id")
-    val userId: String? = null,
-    val instructions: String? = null,
-    @SerialName("response_format")
-    val responseFormat: String? = null,
-    @SerialName("include_graph")
-    val includeGraph: Boolean? = null,
-    val filters: Filters? = null
-)

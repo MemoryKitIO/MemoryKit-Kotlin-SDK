@@ -253,7 +253,7 @@ class MemoriesResource internal constructor(private val http: HttpClient) {
         includeGraph: Boolean? = null,
         filters: Filters? = null
     ): Flow<SSEEvent> {
-        val request = StreamRequest(
+        val request = QueryRequest(
             query = query,
             maxSources = maxSources,
             temperature = temperature,
@@ -262,12 +262,13 @@ class MemoriesResource internal constructor(private val http: HttpClient) {
             instructions = instructions,
             responseFormat = responseFormat,
             includeGraph = includeGraph,
-            filters = filters
+            filters = filters,
+            stream = true
         )
-        val body = http.json.encodeToString(StreamRequest.serializer(), request)
+        val body = http.json.encodeToString(QueryRequest.serializer(), request)
 
         return kotlinx.coroutines.flow.flow {
-            val response = http.postForStream("/memories/stream", body)
+            val response = http.postForStream("/memories/query", body)
             val events = SSEParser.parse(response)
             events.collect { emit(it) }
         }
