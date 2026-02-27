@@ -20,6 +20,8 @@ data class Memory(
     val userId: String? = null,
     val language: String? = null,
     val format: String? = null,
+    @SerialName("chunks_count")
+    val chunksCount: Int? = null,
     @SerialName("created_at")
     val createdAt: String? = null,
     @SerialName("updated_at")
@@ -78,18 +80,31 @@ data class BatchDefaults(
 )
 
 /**
+ * A single item result from batch ingestion.
+ */
+@Serializable
+data class BatchMemoryResult(
+    val id: String,
+    val title: String? = null,
+    val status: String? = null,
+    val index: Int? = null
+)
+
+/**
  * Response from batch ingestion.
  */
 @Serializable
 data class BatchIngestResponse(
-    val accepted: Int? = null,
-    val rejected: Int? = null,
+    val items: List<BatchMemoryResult> = emptyList(),
+    val total: Int? = null,
+    val failed: Int? = null,
     val errors: List<BatchError>? = null
 )
 
 @Serializable
 data class BatchError(
     val index: Int? = null,
+    val error: String? = null,
     val message: String? = null,
     val code: String? = null
 )
