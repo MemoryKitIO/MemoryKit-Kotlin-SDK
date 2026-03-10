@@ -22,8 +22,8 @@ import java.io.Closeable
  *     tags = listOf("planning", "q4")
  * )
  *
- * // Query memories
- * val answer = mk.memories.query(query = "Summarize our Q4 goals")
+ * // Search memories
+ * val results = mk.memories.search(query = "Q4 goals")
  *
  * // Don't forget to close when done
  * mk.close()
@@ -65,14 +65,12 @@ class MemoryKit(
     private val http = HttpClient(this.config)
 
     /**
-     * Memories resource — create, list, update, delete, query, search, and stream memories.
+     * Memories resource — create, list, update, delete, and search memories.
      */
     val memories: MemoriesResource = MemoriesResource(http)
 
-    /**
-     * Chats resource — create and manage chat sessions with message history.
-     */
-    val chats: ChatsResource = ChatsResource(http)
+    // V2: Chats resource disabled for initial launch
+    // val chats: ChatsResource = ChatsResource(http)
 
     /**
      * Users resource — manage users and user events.

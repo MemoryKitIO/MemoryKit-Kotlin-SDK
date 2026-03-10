@@ -7,9 +7,8 @@ Official Kotlin/JVM SDK for [MemoryKit](https://memorykit.io) — memory infrast
 
 ## Features
 
-- Full coverage of the MemoryKit API (memories, chats, users, webhooks, feedback)
+- Full coverage of the MemoryKit API (memories, users, webhooks, feedback)
 - Kotlin coroutines (`suspend` functions) for all async operations
-- Kotlin Flow for SSE streaming
 - Strongly typed request/response models with `kotlinx.serialization`
 - OkHttp 4.x under the hood
 - Automatic retry with exponential backoff on 429 and 5xx errors
@@ -58,12 +57,9 @@ val memory = mk.memories.create(
     userId = "user_123"
 )
 
-// Query memories with RAG
-val answer = mk.memories.query(
-    query = "Summarize our Q4 goals",
-    mode = "balanced"
-)
-println(answer.answer)
+// Search memories
+val results = mk.memories.search(query = "Q4 goals", precision = SearchPrecision.HIGH)
+results.results.forEach { println("${it.title}: ${it.score}") }
 
 // Close when done
 mk.close()
@@ -128,90 +124,20 @@ val updated = mk.memories.update("mem_abc123", title = "New Title")
 mk.memories.delete("mem_abc123")
 ```
 
-### RAG Query
-
-```kotlin
-val result = mk.memories.query(
-    query = "What were our Q4 revenue targets?",
-    maxSources = 5,
-    mode = "balanced",
-    userId = "user_123"
-)
-println("Answer: ${result.answer}")
-println("Confidence: ${result.confidence}")
-result.sources?.forEach { source ->
-    println("Source: ${source.title} (score: ${source.score})")
-}
-```
-
 ### Hybrid Search
 
 ```kotlin
 val results = mk.memories.search(
     query = "quarterly revenue targets",
+    precision = SearchPrecision.HIGH,
     limit = 10,
-    scoreThreshold = 0.7
+    type = "meeting_notes",
+    tags = "planning,q4",
+    createdAfter = "2025-01-01T00:00:00Z"
 )
 results.results.forEach { result ->
     println("${result.title}: ${result.score}")
 }
-```
-
-### SSE Streaming
-
-```kotlin
-mk.memories.stream(
-    query = "Explain our product roadmap",
-    mode = "balanced"
-).collect { event ->
-    when (event.event) {
-        "text" -> print(event.data)
-        "sources" -> println("\nSources: ${event.data}")
-        "usage" -> println("\nUsage: ${event.data}")
-        "done" -> println("\n--- Stream complete ---")
-        "error" -> println("\nError: ${event.data}")
-    }
-}
-```
-
-### Chats
-
-```kotlin
-// Create a chat
-val chat = mk.chats.create(
-    userId = "user_123",
-    title = "Support Chat"
-)
-
-// Send a message
-val response = mk.chats.sendMessage(
-    chatId = chat.id,
-    message = "How do I reset my password?"
-)
-println(response.message.content)
-
-// Stream a chat message
-mk.chats.streamMessage(
-    chatId = chat.id,
-    message = "Tell me more about security features"
-).collect { event ->
-    when (event.event) {
-        "text" -> print(event.data)
-        "done" -> println()
-    }
-}
-
-// List chats
-val chats = mk.chats.list(userId = "user_123")
-
-// Get chat with history
-val chatHistory = mk.chats.get(chat.id)
-chatHistory.messages?.forEach { msg ->
-    println("${msg.role}: ${msg.content}")
-}
-
-// Delete chat
-mk.chats.delete(chat.id)
 ```
 
 ### Users
@@ -363,11 +289,11 @@ Use with a CoroutineScope (e.g., `viewModelScope`):
 class MyViewModel : ViewModel() {
     private val mk = MemoryKit(apiKey = "ctx_...")
 
-    fun queryMemories(query: String) {
+    fun searchMemories(query: String) {
         viewModelScope.launch {
             try {
-                val result = mk.memories.query(query = query)
-                // Update UI state with result.answer
+                val results = mk.memories.search(query = query)
+                // Update UI state with results.results
             } catch (e: MemoryKitException) {
                 // Handle error
             }

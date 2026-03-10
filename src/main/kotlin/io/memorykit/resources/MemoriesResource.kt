@@ -148,129 +148,103 @@ class MemoriesResource internal constructor(private val http: HttpClient) {
         http.delete("/memories/$id")
     }
 
-    /**
-     * Perform a RAG query against stored memories.
-     *
-     * @param query The query string (required).
-     * @param maxSources Maximum number of source documents to include.
-     * @param temperature LLM temperature for response generation.
-     * @param mode Query mode (e.g., "balanced", "precise", "creative").
-     * @param userId Scope the query to a specific user's memories.
-     * @param instructions Additional instructions for the LLM.
-     * @param responseFormat Desired response format.
-     * @param includeGraph Whether to include knowledge graph data.
-     * @param filters Search filters.
-     * @return The [QueryResponse] with answer, sources, and usage info.
-     */
-    suspend fun query(
-        query: String,
-        maxSources: Int? = null,
-        temperature: Double? = null,
-        mode: String? = null,
-        userId: String? = null,
-        instructions: String? = null,
-        responseFormat: String? = null,
-        includeGraph: Boolean? = null,
-        filters: Filters? = null
-    ): QueryResponse {
-        val request = QueryRequest(
-            query = query,
-            maxSources = maxSources,
-            temperature = temperature,
-            mode = mode,
-            userId = userId,
-            instructions = instructions,
-            responseFormat = responseFormat,
-            includeGraph = includeGraph,
-            filters = filters
-        )
-        val body = http.json.encodeToString(QueryRequest.serializer(), request)
-        val response = http.post("/memories/query", body)
-        return http.json.decodeFromString(QueryResponse.serializer(), response)
-    }
+    // V2: query endpoint disabled for initial launch
+    // suspend fun query(
+    //     query: String,
+    //     maxSources: Int? = null,
+    //     temperature: Double? = null,
+    //     mode: String? = null,
+    //     userId: String? = null,
+    //     instructions: String? = null,
+    //     responseFormat: String? = null,
+    //     includeGraph: Boolean? = null,
+    //     filters: Filters? = null
+    // ): QueryResponse {
+    //     val request = QueryRequest(
+    //         query = query,
+    //         maxSources = maxSources,
+    //         temperature = temperature,
+    //         mode = mode,
+    //         userId = userId,
+    //         instructions = instructions,
+    //         responseFormat = responseFormat,
+    //         includeGraph = includeGraph,
+    //         filters = filters
+    //     )
+    //     val body = http.json.encodeToString(QueryRequest.serializer(), request)
+    //     val response = http.post("/memories/query", body)
+    //     return http.json.decodeFromString(QueryResponse.serializer(), response)
+    // }
 
     /**
      * Perform a hybrid search across memories.
      *
-     * @param query Search query string.
-     * @param limit Maximum number of results.
-     * @param scoreThreshold Minimum relevance score threshold.
-     * @param includeGraph Whether to include knowledge graph data.
-     * @param filters Search filters.
+     * @param query Search query string (required).
+     * @param precision Search precision level: LOW, MEDIUM, or HIGH (default: MEDIUM).
+     * @param limit Maximum number of results (1–100, default: 10).
      * @param userId Scope search to a specific user.
+     * @param type Filter by memory type.
+     * @param tags Filter by tags (comma-separated).
+     * @param createdAfter Filter memories created after this ISO 8601 timestamp.
+     * @param createdBefore Filter memories created before this ISO 8601 timestamp.
+     * @param includeGraph Whether to include knowledge graph data.
      * @return The [SearchResponse] with results and optional graph data.
      */
     suspend fun search(
         query: String,
+        precision: SearchPrecision? = null,
         limit: Int? = null,
-        scoreThreshold: Double? = null,
-        includeGraph: Boolean? = null,
-        filters: Filters? = null,
-        userId: String? = null
+        userId: String? = null,
+        type: String? = null,
+        tags: String? = null,
+        createdAfter: String? = null,
+        createdBefore: String? = null,
+        includeGraph: Boolean? = null
     ): SearchResponse {
-        val request = SearchRequest(
-            query = query,
-            limit = limit,
-            scoreThreshold = scoreThreshold,
-            includeGraph = includeGraph,
-            filters = filters,
-            userId = userId
+        val params = mapOf(
+            "query" to query,
+            "precision" to precision?.value,
+            "limit" to limit?.toString(),
+            "user_id" to userId,
+            "type" to type,
+            "tags" to tags,
+            "created_after" to createdAfter,
+            "created_before" to createdBefore,
+            "include_graph" to includeGraph?.toString()
         )
-        val body = http.json.encodeToString(SearchRequest.serializer(), request)
-        val response = http.post("/memories/search", body)
+        val response = http.get("/memories/search", params)
         return http.json.decodeFromString(SearchResponse.serializer(), response)
     }
 
-    /**
-     * Stream a RAG query response using Server-Sent Events.
-     *
-     * Returns a Flow of [SSEEvent] objects. Event types include:
-     * - "text": Streaming text content
-     * - "sources": Source documents
-     * - "usage": Token usage information
-     * - "done": Stream complete
-     * - "error": Stream error
-     *
-     * @param query The query string (required).
-     * @param maxSources Maximum number of source documents.
-     * @param temperature LLM temperature.
-     * @param mode Query mode.
-     * @param userId Scope to user.
-     * @param instructions Additional instructions.
-     * @param responseFormat Response format.
-     * @param includeGraph Include graph data.
-     * @param filters Search filters.
-     * @return A [Flow] of [SSEEvent] objects.
-     */
-    fun stream(
-        query: String,
-        maxSources: Int? = null,
-        temperature: Double? = null,
-        mode: String? = null,
-        userId: String? = null,
-        instructions: String? = null,
-        responseFormat: String? = null,
-        includeGraph: Boolean? = null,
-        filters: Filters? = null
-    ): Flow<SSEEvent> {
-        val request = QueryRequest(
-            query = query,
-            maxSources = maxSources,
-            temperature = temperature,
-            mode = mode,
-            userId = userId,
-            instructions = instructions,
-            responseFormat = responseFormat,
-            includeGraph = includeGraph,
-            filters = filters,
-            stream = true
-        )
-        val body = http.json.encodeToString(QueryRequest.serializer(), request)
-
-        return kotlinx.coroutines.flow.flow {
-            val response = http.postForStream("/memories/query", body)
-            val events = SSEParser.parse(response)
-            events.collect { emit(it) }
-        }
-    }
+    // V2: streaming disabled for initial launch
+    // fun stream(
+    //     query: String,
+    //     maxSources: Int? = null,
+    //     temperature: Double? = null,
+    //     mode: String? = null,
+    //     userId: String? = null,
+    //     instructions: String? = null,
+    //     responseFormat: String? = null,
+    //     includeGraph: Boolean? = null,
+    //     filters: Filters? = null
+    // ): Flow<SSEEvent> {
+    //     val request = QueryRequest(
+    //         query = query,
+    //         maxSources = maxSources,
+    //         temperature = temperature,
+    //         mode = mode,
+    //         userId = userId,
+    //         instructions = instructions,
+    //         responseFormat = responseFormat,
+    //         includeGraph = includeGraph,
+    //         filters = filters,
+    //         stream = true
+    //     )
+    //     val body = http.json.encodeToString(QueryRequest.serializer(), request)
+    //     return kotlinx.coroutines.flow.flow {
+    //         val response = http.postForStream("/memories/query", body)
+    //         val events = SSEParser.parse(response)
+    //         events.collect { emit(it) }
+    //     }
+    // }
 }

@@ -5,20 +5,15 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
 /**
- * Request body for hybrid search.
+ * Search precision level controlling the relevance threshold.
  */
-@Serializable
-data class SearchRequest(
-    val query: String,
-    val limit: Int? = null,
-    @SerialName("score_threshold")
-    val scoreThreshold: Double? = null,
-    @SerialName("include_graph")
-    val includeGraph: Boolean? = null,
-    val filters: Filters? = null,
-    @SerialName("user_id")
-    val userId: String? = null
-)
+enum class SearchPrecision(val value: String) {
+    LOW("low"),
+    MEDIUM("medium"),
+    HIGH("high");
+
+    override fun toString(): String = value
+}
 
 /**
  * Response from hybrid search.
